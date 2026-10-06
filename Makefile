@@ -1,5 +1,5 @@
 CXX      := g++
-CXXFLAGS := -std=c++17 -Wall -Werror -Iinclude
+CXXFLAGS := -std=c++11 -Wall -Werror -Iinclude
 
 # Directory for object files
 BUILD := build
