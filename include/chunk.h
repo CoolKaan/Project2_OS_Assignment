@@ -18,7 +18,7 @@ struct allocation {
 };
 
 // Rounds a request up to the smallest partition that fits it.
-// Returns 0 if the request exceeds the largest partition.
+// Returns 0 for a zero-byte request or one exceeding the largest partition.
 std::size_t round_to_partition(std::size_t request);
 
 // Grows the heap by `size` bytes using sbrk(). Returns nullptr on failure.
