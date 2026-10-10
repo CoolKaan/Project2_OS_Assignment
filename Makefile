@@ -10,7 +10,7 @@ COMMON_OBJS := $(BUILD)/main.o $(BUILD)/parser.o $(BUILD)/chunk.o
 # The three programs to build
 TARGETS := firstfit bestfit quickfit
 
-.PHONY: all clean test-task2
+.PHONY: all clean test-task2 test-task4
 
 # "make" and "make all" both build the three programs
 all: $(TARGETS)
@@ -26,6 +26,20 @@ $(BUILD)/task2_test: tests/task2_test.cpp src/chunk.cpp include/chunk.h include/
 $(BUILD)/heap_failure_test: tests/heap_failure_test.cpp src/chunk.cpp include/chunk.h include/allocation_core.h | $(BUILD)
 	$(CXX) $(CXXFLAGS) tests/heap_failure_test.cpp src/chunk.cpp -Wl,--wrap=sbrk -o $@
 
+test-task4: $(BUILD)/dealloc_firstfit_test $(BUILD)/dealloc_bestfit_test $(BUILD)/dealloc_quickfit_test
+	./$(BUILD)/dealloc_firstfit_test
+	./$(BUILD)/dealloc_bestfit_test
+	./$(BUILD)/dealloc_quickfit_test
+
+$(BUILD)/dealloc_firstfit_test: tests/dealloc_firstfit_test.cpp src/firstfit.cpp src/chunk.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) tests/dealloc_firstfit_test.cpp src/firstfit.cpp src/chunk.cpp -o $@
+
+$(BUILD)/dealloc_bestfit_test: tests/dealloc_bestfit_test.cpp src/bestfit.cpp src/chunk.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) tests/dealloc_bestfit_test.cpp src/bestfit.cpp src/chunk.cpp -o $@
+
+$(BUILD)/dealloc_quickfit_test: tests/dealloc_quickfit_test.cpp src/quickfit.cpp src/chunk.cpp | $(BUILD)
+	$(CXX) $(CXXFLAGS) tests/dealloc_quickfit_test.cpp src/quickfit.cpp src/chunk.cpp -o $@
+	
 firstfit: $(COMMON_OBJS) $(BUILD)/firstfit.o
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
