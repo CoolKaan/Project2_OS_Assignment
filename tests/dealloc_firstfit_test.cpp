@@ -7,12 +7,6 @@
 extern AllocationList occupied_chunks;
 extern AllocationList free_chunks;
 
-// Temporary only for testing Task 4.
-// Task 3 will provide the real version later.
-FreeChunkSelection select_free_chunk(std::size_t) {
-    return {free_chunks, free_chunks.end()};
-}
-
 int main() {
     char block1[32];
     char block2[64];

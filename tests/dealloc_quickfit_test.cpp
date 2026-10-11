@@ -7,17 +7,6 @@
 extern AllocationList occupied_chunks;
 extern AllocationList free_chunks[NUM_PARTITIONS];
 
-// Temporary while Task 3 is not implemented.
-FreeChunkSelection select_free_chunk(std::size_t partition) {
-    for (int i = 0; i < NUM_PARTITIONS; ++i) {
-        if (PARTITION_SIZES[i] == partition) {
-            return {free_chunks[i], free_chunks[i].end()};
-        }
-    }
-
-    return {free_chunks[0], free_chunks[0].end()};
-}
-
 int main() {
     char block1[128];
     char block2[64];

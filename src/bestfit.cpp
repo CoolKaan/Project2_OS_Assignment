@@ -20,7 +20,22 @@ void* alloc(std::size_t chunk_size) {
 }
 
 // Task 3 - Allocation Strategy
-// IMPLEMENT BELOW
+FreeChunkSelection select_free_chunk(std::size_t partition) {
+    auto best = free_chunks.end();
+
+    for (auto it = free_chunks.begin(); it != free_chunks.end(); ++it) {
+        if ((*it)->size >= partition &&
+            (best == free_chunks.end() || (*it)->size < (*best)->size)) {
+            best = it;
+
+            if ((*it)->size == partition) {
+                break;
+            }
+        }
+    }
+    return {free_chunks, best};
+}
+
 
 // Task 4 - Deallocation
 void dealloc(void* chunk) {

@@ -21,7 +21,16 @@ void* alloc(std::size_t chunk_size) {
 }
 
 // Task 3 - Allocation Strategy
-// IMPLEMENT BELOW
+FreeChunkSelection select_free_chunk(std::size_t partition) {
+    for (int i = 0; i < NUM_PARTITIONS; ++i) {
+        if (PARTITION_SIZES[i] == partition) {
+            return {free_chunks[i], free_chunks[i].begin()};
+        }
+    }
+
+    std::abort();
+}
+
 
 // Task 4 - Deallocation
 void dealloc(void* chunk) {
