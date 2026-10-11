@@ -1,101 +1,189 @@
-# Project2_OS_Assignment
+# Project 2 - Memory Allocation
 
-## Task 2 - Memory Allocation
+COSC1114 Operating Systems Principles. C++ memory allocation simulator
+implementing First Fit, Best Fit, and Quick Fit allocation strategies.
 
-Implemented the `alloc(std::size_t)` entry point in each strategy source,
-shared allocation bookkeeping in `include/allocation_core.h`, and partition
-rounding / Linux `sbrk()` handling in `src/chunk.cpp`.
+## Project layout
 
-Requests from 1 through 512 bytes round up to 32, 64, 128, 256 or 512 bytes.
-Zero and oversized requests return `nullptr` with `errno = EINVAL`.
-An existing free chunk keeps its full partition size: it is not split.
-Its record moves to the occupied list and `used` becomes the requested size.
-If no free chunk fits, bookkeeping is prepared before requesting exactly one
-partition from `sbrk()`. Allocation failure returns `nullptr`; a failed heap
-request removes the provisional record. Memory is not returned to the OS.
+```text
+Project2_OS_Assignment/
+|-- include/
+|   |-- allocation_core.h       # Shared allocation record and bookkeeping
+|   |-- allocation_strategy.h   # Allocation strategy interface
+|   |-- chunk.h                 # Chunk allocation helpers
+|   |-- memory.h                # Public alloc/dealloc interface
+|   `-- parser.h                # Datafile parser interface
+|
+|-- src/
+|   |-- firstfit.cpp            # First Fit implementation
+|   |-- bestfit.cpp             # Best Fit implementation
+|   |-- quickfit.cpp            # Quick Fit implementation
+|   |-- chunk.cpp               # Partition rounding and sbrk() handling
+|   |-- parser.cpp              # Reads alloc/dealloc commands
+|   `-- main.cpp                # Program entry point
+|
+|-- tests/
+|   |-- task2_test.cpp
+|   |-- heap_failure_test.cpp
+|   |-- dealloc_firstfit_test.cpp
+|   |-- dealloc_bestfit_test.cpp
+|   `-- dealloc_quickfit_test.cpp
+|
+|-- Makefile
+|-- p2_gen.sh                   # Alloc/dealloc sequence generator
+|-- datafile                    # Sample input
+`-- README.md
+```
 
-### Integration with the remaining tasks
+Run all commands below from the project root.
 
-Task 3 must implement `select_free_chunk(partition)` separately in each
-strategy source, using the lists already declared there. The interface is
-in `include/allocation_strategy.h`. It must search before heap growth,
-return a matching iterator without erasing it, or return a list's `end()`
-when no block fits. Quick Fit returns the relevant size-class list.
+## Build
 
-### Build and check Task 2
+Build all three allocation programs with:
 
-On Linux, WSL, or an RMIT teaching server with GNU Make and g++:
+```sh
+make all
+```
+
+or:
+
+```sh
+make
+```
+
+The Makefile compiles the shared source files and links them with each
+allocation strategy to create:
+
+```text
+firstfit
+bestfit
+quickfit
+```
+
+The intermediate object and dependency files are stored in `build/`.
+
+Build an individual strategy with:
+
+```sh
+make firstfit
+make bestfit
+make quickfit
+```
+
+Remove generated executables and build files with:
+
+```sh
+make clean
+```
+
+To rebuild everything from scratch:
+
+```sh
+make clean
+make all
+```
+
+## Running
+
+Each program takes a datafile containing allocation and deallocation commands.
+
+```sh
+./firstfit datafile
+./bestfit datafile
+./quickfit datafile
+```
+
+Example input:
+
+```text
+alloc: 20
+alloc: 100
+alloc: 250
+dealloc
+alloc: 60
+```
+
+`alloc: N` requests `N` bytes.
+
+`dealloc` deallocates the most recently allocated chunk that has not already
+been deallocated.
+
+After processing the complete datafile, the program prints the allocated and
+free memory lists.
+
+## Memory allocation
+
+Memory is allocated using fixed partition sizes:
+
+```text
+32, 64, 128, 256, 512 bytes
+```
+
+Requests are rounded up to the smallest partition that can contain them.
+
+First Fit selects the first suitable free chunk.
+
+Best Fit selects the smallest suitable free chunk.
+
+Quick Fit maintains a separate free list for each partition size.
+
+Deallocated chunks are returned to the appropriate free list for later reuse
+rather than being returned to the operating system.
+
+## Generate a datafile
+
+The supplied `p2_gen.sh` script generates a sequence of `alloc` and `dealloc`
+commands.
+
+Make the script executable:
+
+```sh
+chmod +x p2_gen.sh
+```
+
+Generate 20 operations:
+
+```sh
+./p2_gen.sh 20 > datafile
+```
+
+View the generated input:
+
+```sh
+cat datafile
+```
+
+Then run any strategy using the generated file:
+
+```sh
+./firstfit datafile
+```
+
+## Tests
+
+Run the memory allocation tests with:
 
 ```sh
 make test-task2
 ```
 
-## Task 4 - Memory Deallocation
-
-Task 4 implements the `dealloc(void*)` function for each memory allocation
-strategy.
-
-The function searches `occupied_chunks` for the allocation record whose
-`space` pointer matches the pointer passed to `dealloc()`.
-
-When the matching allocation is found, its `used` field is set to `0` to mark
-the chunk as no longer in use. The allocation record is then removed from the
-occupied list and transferred to the end of the appropriate free list.
-
-The memory itself is not returned to the operating system. Instead, the freed
-chunk remains available so that it can be reused by future calls to `alloc()`.
-
-For First Fit and Best Fit, deallocated chunks are added to the end of the
-single `free_chunks` list.
-
-For Quick Fit, the allocation record is returned to the free list associated
-with its partition size:
-
-- 32 bytes
-- 64 bytes
-- 128 bytes
-- 256 bytes
-- 512 bytes
-
-If the pointer passed to `dealloc()` cannot be found in `occupied_chunks`,
-the program terminates because attempting to free memory that is not currently
-allocated is treated as a fatal error.
-
-## Task 4 Testing
-
-Task 4 can be tested independently from the complete program using the
-deallocation tests in the `tests` directory.
-
-The tests create allocation records manually, place them into
-`occupied_chunks`, call `dealloc()`, and verify that:
-
-- the matching allocation is removed from `occupied_chunks`
-- the allocation's `used` value becomes `0`
-- the allocation is moved to the correct free list
-- remaining allocated chunks are not affected
-- Quick Fit returns the chunk to the correct partition list
-
-The tests allow the deallocation functionality to be checked separately while
-other tasks are still being developed.
-
-Run all Task 4 tests using:
+Run the deallocation tests with:
 
 ```sh
 make test-task4
 ```
 
+The tests cover partition allocation, invalid requests, allocation failure,
+free-chunk reuse, and movement of deallocated chunks back into the appropriate
+free lists.
 
-The independent test uses `-std=c++11 -Wall -Werror` and checks partition
-boundaries, writable new chunks, reuse of a larger free partition, metadata,
-and invalid requests. A second test simulates `sbrk()` failure and checks
-that no allocation record is left behind. Tests exercise the component without requiring
-the unfinished strategy searches, parser, or main program.
+## Compiler settings
 
-Once the other tasks are integrated:
+The project is compiled using C++11 with:
 
-```sh
-make all
-./firstfit datafile
-./bestfit datafile
-./quickfit datafile
+```text
+-std=c++11 -Wall -Werror
 ```
+
+The allocator uses the Linux `sbrk()` system call for requesting new heap
+memory.
