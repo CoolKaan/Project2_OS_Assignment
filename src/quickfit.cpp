@@ -6,11 +6,8 @@
 
 
 // Task 3's search and Task 4's dealloc use these same lists in this file.
-namespace {
 AllocationList occupied_chunks;
 AllocationList free_chunks[NUM_PARTITIONS];
-AllocationCleanup cleanup{occupied_chunks, free_chunks, NUM_PARTITIONS};
-}
 
 void* alloc(std::size_t chunk_size) {
     const std::size_t partition = round_to_partition(chunk_size);
@@ -27,13 +24,7 @@ void* alloc(std::size_t chunk_size) {
 FreeChunkSelection select_free_chunk(std::size_t partition) {
     for (int i = 0; i < NUM_PARTITIONS; ++i) {
         if (PARTITION_SIZES[i] == partition) {
-            // Check larger size classes before requesting more OS memory.
-            for (int j = i; j < NUM_PARTITIONS; ++j) {
-                if (!free_chunks[j].empty()) {
-                    return {free_chunks[j], free_chunks[j].begin()};
-                }
-            }
-            return {free_chunks[i], free_chunks[i].end()};
+            return {free_chunks[i], free_chunks[i].begin()};
         }
     }
 
