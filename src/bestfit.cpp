@@ -69,3 +69,25 @@ void dealloc(void* chunk) {
 
     std::exit(EXIT_FAILURE);
 }
+
+void print_lists() {
+    std::cout << "Allocated list:" << std::endl;
+
+    for (allocation* record : occupied_chunks) {
+        std::cout
+            << "Address: " << record->space
+            << ", Size: " << record->size
+            << ", Used: " << record->used
+            << std::endl;
+    }
+
+    std::cout << "Free list:" << std::endl;
+
+    for (allocation* record : free_chunks) {
+        std::cout
+            << "Address: " << record->space
+            << ", Size: " << record->size
+            << ", Used: " << record->used
+            << std::endl;
+    }
+}
