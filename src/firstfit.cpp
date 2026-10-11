@@ -29,7 +29,6 @@ FreeChunkSelection select_free_chunk(std::size_t partition) {
     return {free_chunks, free_chunks.end()};
 }
 
-
 // Task 4 - Deallocation
 void dealloc(void* chunk) {
     // Find the matching allocated chunk.
