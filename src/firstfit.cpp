@@ -5,8 +5,11 @@
 #include <iostream>
 
 // Task 3's search and Task 4's dealloc use these same lists in this file.
+namespace {
 AllocationList occupied_chunks;
 AllocationList free_chunks;
+AllocationCleanup cleanup{occupied_chunks, &free_chunks, 1};
+}
 
 void* alloc(std::size_t chunk_size) {
     const std::size_t partition = round_to_partition(chunk_size);

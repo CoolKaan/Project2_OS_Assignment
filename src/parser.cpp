@@ -10,7 +10,7 @@
 bool process_df(const char* filename) {
     std::ifstream file(filename);
     if (!file) {
-        std::cerr << "File not opened" << filename << std::endl;
+        std::cerr << "Cannot open datafile: " << filename << std::endl;
         return false;
     }
 
@@ -26,10 +26,23 @@ bool process_df(const char* filename) {
         if (!(input >> command)) continue;
 
         if (command == "alloc:") {
-            std::size_t bytes;
-            if (!(input >> bytes) || (input >> extra)) {
-                std::cerr << "Invalid allocation at l" << line_number << std::endl;
+            std::string amount;
+            if (!(input >> amount) || (input >> extra) ||
+                amount.find_first_not_of("0123456789") != std::string::npos) {
+                std::cerr << "Invalid allocation at line " << line_number << std::endl;
                 return false;
+            }
+
+            // Bound during parsing so neither signed input nor integer
+            // overflow can wrap into an otherwise valid allocation size.
+            std::size_t bytes = 0;
+            for (char digit : amount) {
+                bytes = bytes * 10 + static_cast<std::size_t>(digit - '0');
+                if (bytes > 512) {
+                    std::cerr << "Allocation size exceeds 512 at line "
+                              << line_number << std::endl;
+                    return false;
+                }
             }
 
             void* chunk = alloc(bytes);
@@ -45,13 +58,13 @@ bool process_df(const char* filename) {
                 active.pop_back();
             }
         } else {
-            std::cerr << "Invalid" << line_number << std::endl;
+            std::cerr << "Invalid command at line " << line_number << std::endl;
             return false;
         }
     }
 
     if (file.bad()) {
-        std::cerr << "Error!!!" << filename << std::endl;
+        std::cerr << "Error reading datafile: " << filename << std::endl;
         return false;
     }
     return true;

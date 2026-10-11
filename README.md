@@ -127,6 +127,11 @@ Best Fit selects the smallest suitable free chunk.
 
 Quick Fit maintains a separate free list for each partition size.
 
+It checks the requested size class first, then larger classes before growing
+the heap. Reused chunks retain their full partition size; they are not split.
+All strategies keep their lists private to their implementation file and
+delete accounting records at shutdown without returning chunk storage to the OS.
+
 Deallocated chunks are returned to the appropriate free list for later reuse
 rather than being returned to the operating system.
 
@@ -160,6 +165,19 @@ Then run any strategy using the generated file:
 ```
 
 ## Tests
+
+Build all three programs and run all allocation/strategy/deallocation tests:
+
+```sh
+make test
+```
+
+Strategy tests use the public API and cover non-LIFO deallocation, First Fit
+versus Best Fit selection, Quick Fit larger-class reuse, FIFO free-list order,
+and fatal rejection of unknown, interior, null, and double-freed pointers.
+Fatal-error messages during these tests are expected from child processes.
+The full test target also needs Python 3 for command-line input checks and a
+repeatable 3,000-operation workload for each strategy.
 
 Run the memory allocation tests with:
 

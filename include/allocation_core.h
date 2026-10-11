@@ -10,6 +10,25 @@
 
 using AllocationList = std::list<allocation*>;
 
+// Own the metadata until shutdown, without ever freeing sbrk storage.
+// Declare this after its lists so it is destroyed before the list nodes.
+struct AllocationCleanup {
+    AllocationList& occupied;
+    AllocationList* free_lists;
+    std::size_t count;
+
+    ~AllocationCleanup() {
+        for (allocation* record : occupied) {
+            delete record;
+        }
+        for (std::size_t i = 0; i < count; ++i) {
+            for (allocation* record : free_lists[i]) {
+                delete record;
+            }
+        }
+    }
+};
+
 // Task 3 supplies the selected free list and its matching iterator.
 // For Quick Fit, free_chunks is the selected partition's list.
 // Pass free_chunks.end() when the strategy finds no suitable chunk.
