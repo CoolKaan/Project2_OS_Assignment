@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-bool process_datafile(const char* filename) {
+bool process_df(const char* filename) {
     std::ifstream file(filename);
     if (!file) {
         std::cerr << "File not opened" << filename << std::endl;
